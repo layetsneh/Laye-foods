@@ -242,16 +242,38 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    sounds.playTabSwitch();
+    sounds.playNotification();
     setIsLoggedIn(false);
     saveStoredIsLoggedIn(false);
     setUser(GUEST_USER);
     saveStoredUser(GUEST_USER);
+    setIsUserModalOpen(false);
+    if (currentTab === 'auth') {
+      setCurrentTab('home');
+    }
     setFloatingToast({
-      title: '👋 Signed Out',
+      title: '👋 Signed Out Successfully',
       message: 'You have been signed out. Explore our menu anytime!',
     });
     setTimeout(() => setFloatingToast(null), 4000);
+  };
+
+  const handleApplyPromoCode = (code: string) => {
+    sounds.playAddToCart();
+    const cleanCode = code.trim().toUpperCase();
+    setPromoCode(cleanCode);
+    const subtotal = cart.reduce((acc, item) => acc + item.totalPrice, 0);
+    const discount = subtotal > 0 ? Math.round((subtotal * 10) / 100) : 0;
+    setAppliedPromo({
+      code: cleanCode,
+      discount: discount,
+      description: '10% Welcome Discount for your first Laye Foods order',
+    });
+    setFloatingToast({
+      title: `🎉 Code ${cleanCode} Applied!`,
+      message: '10% discount activated for your order! Explore the menu and add your favorites to cart.',
+    });
+    setTimeout(() => setFloatingToast(null), 4500);
   };
 
   return (
@@ -295,6 +317,8 @@ export default function App() {
           window.scrollTo({ top: 300, behavior: 'smooth' });
         }}
         onOpenAuth={handleOpenAuth}
+        onApplyPromoCode={handleApplyPromoCode}
+        appliedPromoCode={appliedPromo?.code}
       />
 
       {/* Main Content Area */}

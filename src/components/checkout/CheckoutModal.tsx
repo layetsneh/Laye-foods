@@ -77,7 +77,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
   const zoneInfo = DELIVERY_ZONES.find((z) => z.zone === selectedZone);
   const deliveryFee = deliveryType === 'pickup' ? 0 : zoneInfo ? zoneInfo.fee : 1500;
-  const promoDiscount = appliedPromo ? appliedPromo.discount : 0;
+  const promoDiscount = appliedPromo
+    ? appliedPromo.code === 'LAYEFIRST'
+      ? Math.round((subtotal * 10) / 100)
+      : appliedPromo.discount
+    : 0;
   const loyaltyDiscount = useLoyaltyPoints ? Math.floor(loyaltyPointsToUse / 100) * 500 : 0;
   const totalAmount = Math.max(0, subtotal + deliveryFee - promoDiscount - loyaltyDiscount);
   const pointsToEarn = Math.floor(totalAmount / 1000) * 10;

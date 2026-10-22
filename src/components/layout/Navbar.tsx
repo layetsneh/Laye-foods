@@ -12,6 +12,8 @@ import {
   Flame,
   Search,
   Sparkles,
+  Check,
+  Tag,
 } from 'lucide-react';
 import { UserProfile, CartItem, AppNotification, DeliveryZone } from '../../types';
 import { DELIVERY_ZONES } from '../../data/menuData';
@@ -33,6 +35,8 @@ interface NavbarProps {
   setSelectedZone: (zone: DeliveryZone) => void;
   onSearchClick: () => void;
   onOpenAuth: (mode: 'signin' | 'signup') => void;
+  onApplyPromoCode?: (code: string) => void;
+  appliedPromoCode?: string | null;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -52,10 +56,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   setSelectedZone,
   onSearchClick,
   onOpenAuth,
+  onApplyPromoCode,
+  appliedPromoCode,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showZoneDropdown, setShowZoneDropdown] = useState(false);
+  const [promoCopied, setPromoCopied] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,6 +76,24 @@ export const Navbar: React.FC<NavbarProps> = ({
   const cartSubtotal = cart.reduce((acc, item) => acc + item.totalPrice, 0);
   const unreadNotifsCount = notifications.filter((n) => !n.read).length;
 
+  const handleApplyWelcomePromo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText('LAYEFIRST');
+      }
+    } catch {
+      // ignore clipboard error
+    }
+    setPromoCopied(true);
+    if (onApplyPromoCode) {
+      onApplyPromoCode('LAYEFIRST');
+    }
+    setTimeout(() => {
+      setPromoCopied(false);
+    }, 4500);
+  };
+
   const navLinks = [
     { id: 'home', label: 'Home' },
     { id: 'menu', label: 'Menu & Dishes' },
@@ -77,27 +102,77 @@ export const Navbar: React.FC<NavbarProps> = ({
     ...(!isLoggedIn ? [{ id: 'auth', label: 'Login / Sign Up' }] : []),
   ];
 
+  const isLayeFirstApplied = appliedPromoCode === 'LAYEFIRST' || promoCopied;
+
   return (
     <>
-      {/* Top promotional bar */}
-      <div className="bg-[#082016] text-[#FBBF24] border-b border-[#164E35]/60 text-xs py-2 px-4 transition-all">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-4">
-          <div className="flex items-center gap-2 font-medium tracking-wide">
-            <span className="inline-flex items-center gap-1 bg-[#F59E0B]/20 text-[#FBBF24] px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-              <Flame className="w-3 h-3 text-[#F59E0B] fill-[#F59E0B]" /> 24/7 Delivery
+      {/* Top promotional bar - fully interactive and clickable */}
+      <div className="bg-[#082016] text-[#FBBF24] border-b border-[#164E35]/60 text-xs py-2 px-3 sm:px-4 transition-all">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4">
+          
+          {/* 24/7 Delivery info button */}
+          <button
+            type="button"
+            onClick={() => {
+              setCurrentTab('menu');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            title="Browse all 24/7 authentic Nigerian feasts"
+            className="flex items-center gap-2 font-medium tracking-wide hover:text-white transition-colors cursor-pointer group text-left"
+          >
+            <span className="inline-flex items-center gap-1 bg-[#F59E0B]/20 group-hover:bg-[#F59E0B] group-hover:text-gray-950 text-[#FBBF24] px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors shrink-0">
+              <Flame className="w-3 h-3 text-[#F59E0B] group-hover:text-gray-950 fill-[#F59E0B] group-hover:fill-gray-950" /> 24/7 Delivery
             </span>
-            <span>Hot authentic Nigerian feasts delivered across Lagos & Abuja</span>
-          </div>
+            <span className="group-hover:underline underline-offset-2">
+              Hot authentic Nigerian feasts delivered across Lagos & Abuja
+            </span>
+          </button>
 
-          <div className="flex items-center gap-4 text-[11px] text-[#A7F3D0]">
-            <span className="hidden md:inline">
-              🎁 Use Code <strong className="text-white underline decoration-[#F59E0B]">LAYEFIRST</strong> for 10% Off
-            </span>
-            <span className="hidden sm:inline">|</span>
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-[#FBBF24]" />
-              Earn 10 Chop Points per ₦1,000
-            </span>
+          {/* Right action triggers: Promo Code & Chop Points */}
+          <div className="flex items-center gap-3 sm:gap-4 text-[11px] text-[#A7F3D0] flex-wrap justify-center">
+            
+            {/* Clickable Promo Code pill */}
+            <button
+              type="button"
+              onClick={handleApplyWelcomePromo}
+              title="Click to copy & apply code LAYEFIRST for 10% off"
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer border active:scale-95 shadow-sm ${
+                isLayeFirstApplied
+                  ? 'bg-emerald-900/90 border-emerald-400 text-emerald-200'
+                  : 'bg-[#F59E0B]/15 hover:bg-[#F59E0B]/30 border-[#F59E0B]/60 text-white hover:text-[#FBBF24]'
+              }`}
+            >
+              {isLayeFirstApplied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Code <strong className="text-[#FBBF24] font-bold">LAYEFIRST</strong> Applied (-10%)!</span>
+                </>
+              ) : (
+                <>
+                  <Tag className="w-3 h-3 text-[#F59E0B] shrink-0" />
+                  <span>Use Code <strong className="text-white underline decoration-[#F59E0B] font-bold">LAYEFIRST</strong> for 10% Off</span>
+                  <span className="text-[9px] bg-[#F59E0B] hover:bg-amber-400 text-gray-950 font-black px-1.5 py-0.5 rounded uppercase ml-0.5 shadow-sm">
+                    Apply
+                  </span>
+                </>
+              )}
+            </button>
+
+            <span className="hidden sm:inline text-emerald-700">|</span>
+
+            {/* Clickable Chop Points trigger */}
+            <button
+              type="button"
+              onClick={() => setIsLoyaltyModalOpen(true)}
+              title="Open Chop Club to see points, tiers and redeem rewards"
+              className="flex items-center gap-1.5 hover:text-[#FBBF24] transition-colors cursor-pointer group"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#FBBF24] group-hover:rotate-12 transition-transform" />
+              <span className="group-hover:underline underline-offset-2">
+                Earn 10 Chop Points per ₦1,000
+              </span>
+              <span className="text-[10px] text-[#FBBF24] opacity-80 group-hover:opacity-100 group-hover:translate-x-0.5 transition-transform">→</span>
+            </button>
           </div>
         </div>
       </div>
@@ -277,12 +352,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               ) : (
                 <button
-                  onClick={onLogout}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onLogout();
+                  }}
                   title={`Signed in as ${user.name}. Click to Sign Out`}
-                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-rose-950/60 hover:border-rose-600/60 text-emerald-200 hover:text-rose-200 border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
+                  aria-label="Sign Out"
+                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold bg-rose-950/60 hover:bg-rose-900 border border-rose-700/80 hover:border-rose-500 text-rose-200 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap active:scale-95 shadow-sm"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-400" />
-                  <span className="hidden xl:inline text-[11px]">Sign Out</span>
+                  <LogOut className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  <span className="text-xs font-bold whitespace-nowrap">Sign Out</span>
                 </button>
               )}
 

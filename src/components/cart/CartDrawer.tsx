@@ -65,7 +65,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   // Calculate promo discount
   let promoDiscount = 0;
   if (appliedPromo) {
-    promoDiscount = appliedPromo.discount;
+    if (appliedPromo.code === 'LAYEFIRST') {
+      promoDiscount = Math.round((subtotal * 10) / 100);
+    } else {
+      promoDiscount = appliedPromo.discount;
+    }
   }
 
   // Loyalty points discount (100 points = ₦500 off)
