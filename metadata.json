@@ -1,0 +1,7 @@
+{
+  "name": "Laye Foods - Authentic Nigerian Cuisine & Online Food Ordering",
+  "description": "Order authentic Nigerian swallows, rich soups, seafood, grills, and small chops from Laye Foods. Live order tracking, loyalty rewards, and fast delivery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
