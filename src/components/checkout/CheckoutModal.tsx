@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   MapPin,
@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Clock,
   Sparkles,
+  Zap,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -57,14 +58,56 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const isGuest = !user || user.id === 'guest';
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
-  const [customerName, setCustomerName] = useState(user.name || '');
-  const [customerPhone, setCustomerPhone] = useState(user.phone || '');
-  const [customerEmail, setCustomerEmail] = useState(user.email || '');
-  const [streetAddress, setStreetAddress] = useState(user.addresses[0]?.address || '');
-  const [landmark, setLandmark] = useState(user.addresses[0]?.landmark || '');
+  const [customerName, setCustomerName] = useState(
+    user.name && user.name !== 'Guest Diner' ? user.name : 'Guest Diner'
+  );
+  const [customerPhone, setCustomerPhone] = useState(
+    user.phone || '+234 803 123 4567'
+  );
+  const [customerEmail, setCustomerEmail] = useState(
+    user.email || 'guest@layefoods.ng'
+  );
+  const [streetAddress, setStreetAddress] = useState(
+    user.addresses[0]?.address || '14 Karimu Kotun Street, Victoria Island, Lagos'
+  );
+  const [landmark, setLandmark] = useState(
+    user.addresses[0]?.landmark || 'Near Eko Hotel Roundabout'
+  );
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('paystack_card');
+
+  // Auto-fill guest or user details when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setErrorMsg('');
+      if (isGuest) {
+        if (!customerName || customerName.trim() === '') setCustomerName('Guest Diner');
+        if (!customerPhone || customerPhone.trim() === '') setCustomerPhone('+234 803 123 4567');
+        if (!customerEmail || customerEmail.trim() === '') setCustomerEmail('guest@layefoods.ng');
+        if (!streetAddress || streetAddress.trim() === '') setStreetAddress('14 Karimu Kotun Street, Victoria Island, Lagos');
+        if (!landmark || landmark.trim() === '') setLandmark('Near Eko Hotel Roundabout');
+      } else {
+        if (user.name) setCustomerName(user.name);
+        if (user.phone) setCustomerPhone(user.phone);
+        if (user.email) setCustomerEmail(user.email);
+        if (user.addresses?.[0]?.address) setStreetAddress(user.addresses[0].address);
+        if (user.addresses?.[0]?.landmark) setLandmark(user.addresses[0].landmark);
+      }
+    }
+  }, [isOpen, user.id]);
+
+  const handleAutoFillGuest = () => {
+    setCustomerName('Guest Diner');
+    setCustomerPhone('+234 803 123 4567');
+    setCustomerEmail('guest@layefoods.ng');
+    setStreetAddress('14 Karimu Kotun Street, Victoria Island, Lagos');
+    setLandmark('Near Eko Hotel Roundabout');
+    setErrorMsg('');
+  };
 
   // Paystack mock state
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -87,18 +130,49 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const pointsToEarn = Math.floor(totalAmount / 1000) * 10;
 
   const validateForm = () => {
-    if (!customerName.trim()) {
-      setErrorMsg('Please enter your full name.');
+    if (cart.length === 0) {
+      setErrorMsg('Your cart is empty. Please add items to checkout.');
       return false;
     }
-    if (!customerPhone.trim() || customerPhone.length < 8) {
-      setErrorMsg('Please enter a valid Nigerian mobile phone number (e.g. +234 803 123 4567).');
-      return false;
+
+    let finalName = customerName.trim();
+    if (!finalName) {
+      if (isGuest) {
+        finalName = 'Guest Diner';
+        setCustomerName('Guest Diner');
+      } else {
+        setErrorMsg('Please enter your full name.');
+        scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
     }
-    if (deliveryType === 'delivery' && !streetAddress.trim()) {
-      setErrorMsg('Please provide your complete delivery street address.');
-      return false;
+
+    let finalPhone = customerPhone.trim();
+    if (!finalPhone || finalPhone.length < 7) {
+      if (isGuest) {
+        finalPhone = '+234 803 123 4567';
+        setCustomerPhone('+234 803 123 4567');
+      } else {
+        setErrorMsg('Please enter a valid mobile phone number (e.g. +234 803 123 4567).');
+        scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
     }
+
+    if (deliveryType === 'delivery') {
+      let finalAddress = streetAddress.trim();
+      if (!finalAddress) {
+        if (isGuest) {
+          finalAddress = '14 Karimu Kotun Street, Victoria Island, Lagos';
+          setStreetAddress('14 Karimu Kotun Street, Victoria Island, Lagos');
+        } else {
+          setErrorMsg('Please provide your complete delivery street address.');
+          scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          return false;
+        }
+      }
+    }
+
     setErrorMsg('');
     return true;
   };
@@ -148,15 +222,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     return {
       id: 'ord-' + Date.now(),
       orderNumber: orderNum,
-      customerId: user.id,
-      customerName,
-      customerPhone,
-      customerEmail,
+      customerId: user.id || 'guest',
+      customerName: customerName.trim() || 'Guest Diner',
+      customerPhone: customerPhone.trim() || '+234 803 123 4567',
+      customerEmail: customerEmail.trim() || 'guest@layefoods.ng',
       deliveryType,
       deliveryZone: selectedZone,
-      deliveryAddress: deliveryType === 'pickup' ? 'Laye Foods Kitchen Hub, 14 Karimu Kotun St, Victoria Island' : streetAddress,
-      landmark: landmark || undefined,
-      deliveryInstructions: deliveryInstructions || undefined,
+      deliveryAddress: deliveryType === 'pickup'
+        ? 'Laye Foods Kitchen Hub, 14 Karimu Kotun St, Victoria Island'
+        : (streetAddress.trim() || '14 Karimu Kotun Street, Victoria Island, Lagos'),
+      landmark: landmark.trim() || undefined,
+      deliveryInstructions: deliveryInstructions.trim() || undefined,
       items: [...cart],
       subtotal,
       deliveryFee,
@@ -273,13 +349,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </div>
 
           {/* Form Content */}
-          <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 text-stone-800">
+          <div ref={scrollRef} className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 text-stone-800">
             
             {/* Error banner */}
             {errorMsg && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>{errorMsg}</span>
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+                {isGuest && (
+                  <button
+                    type="button"
+                    onClick={handleAutoFillGuest}
+                    className="text-[11px] underline font-bold text-rose-900 shrink-0 hover:text-black cursor-pointer"
+                  >
+                    Auto-Fill Demo Details
+                  </button>
+                )}
               </div>
             )}
 
@@ -318,9 +405,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
             {/* Contact Details */}
             <div className="space-y-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
-                Customer & Contact Info
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
+                  Customer & Contact Info
+                </label>
+                {isGuest && (
+                  <button
+                    type="button"
+                    onClick={handleAutoFillGuest}
+                    className="text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-300/80 px-2 py-0.5 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <Zap className="w-3 h-3 text-amber-600 fill-amber-500" />
+                    <span>Auto-Fill Guest Info</span>
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="relative">
                   <User className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
@@ -496,25 +595,62 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </div>
 
           {/* Checkout Footer Action */}
-          <div className="p-4 sm:p-5 bg-stone-50 border-t border-stone-200 flex items-center justify-between gap-4">
-            <div className="text-left">
-              <span className="text-[10px] text-stone-400 uppercase font-bold tracking-wider block">Total Payable</span>
-              <span className="text-xl font-black text-[#0C2B1E]">
-                ₦{totalAmount.toLocaleString()}
-              </span>
-            </div>
+          <div className="p-4 sm:p-5 bg-stone-50 border-t border-stone-200 flex flex-col gap-3">
+            {/* If errorMsg exists, show it prominently right here above the button */}
+            {errorMsg && (
+              <div className="p-2.5 bg-rose-50 border border-rose-300 rounded-xl text-xs text-rose-800 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+                {isGuest && (
+                  <button
+                    type="button"
+                    onClick={handleAutoFillGuest}
+                    className="text-[11px] underline font-bold text-rose-900 shrink-0 hover:text-black cursor-pointer"
+                  >
+                    Quick Auto-Fill
+                  </button>
+                )}
+              </div>
+            )}
 
-            <button
-              type="button"
-              onClick={handleInitiateOrder}
-              disabled={isProcessingPayment}
-              className="bg-[#F59E0B] hover:bg-[#ea9407] text-gray-950 px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-amber-500/20 active:scale-95 transition-all flex items-center gap-2"
-            >
-              <Lock className="w-4 h-4" />
-              <span>
-                {paymentMethod === 'paystack_card' ? `Pay ₦${totalAmount.toLocaleString()}` : 'Confirm & Place Order'}
-              </span>
-            </button>
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-left">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] text-stone-400 uppercase font-bold tracking-wider block">Total Payable</span>
+                  {isGuest && (
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">
+                      Guest Order
+                    </span>
+                  )}
+                </div>
+                <span className="text-xl font-black text-[#0C2B1E]">
+                  ₦{totalAmount.toLocaleString()}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleInitiateOrder}
+                disabled={isProcessingPayment}
+                className="bg-[#F59E0B] hover:bg-[#ea9407] text-gray-950 px-6 sm:px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin" />
+                    <span>Placing Order...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    <span>
+                      {paymentMethod === 'paystack_card' ? `Pay ₦${totalAmount.toLocaleString()}` : 'Confirm & Place Order'}
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
         </div>
