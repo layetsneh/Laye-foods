@@ -14,6 +14,9 @@ import {
   saveStoredOrders,
   getStoredUser,
   saveStoredUser,
+  getStoredIsLoggedIn,
+  saveStoredIsLoggedIn,
+  GUEST_USER,
   getActiveOrderId,
   setActiveOrderId,
   getStoredNotifications,
@@ -67,6 +70,7 @@ export default function App() {
   // Core Data
   const [menu, setMenu] = useState<MenuItem[]>(getStoredMenu());
   const [orders, setOrders] = useState<Order[]>(getStoredOrders());
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => getStoredIsLoggedIn());
   const [user, setUser] = useState<UserProfile>(getStoredUser());
   const [notifications, setNotifications] = useState<AppNotification[]>(getStoredNotifications());
   const [selectedZone, setSelectedZone] = useState<DeliveryZone>('Victoria Island / Ikoyi');
@@ -237,6 +241,19 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLogout = () => {
+    sounds.playTabSwitch();
+    setIsLoggedIn(false);
+    saveStoredIsLoggedIn(false);
+    setUser(GUEST_USER);
+    saveStoredUser(GUEST_USER);
+    setFloatingToast({
+      title: '👋 Signed Out',
+      message: 'You have been signed out. Explore our menu anytime!',
+    });
+    setTimeout(() => setFloatingToast(null), 4000);
+  };
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex flex-col font-['Plus_Jakarta_Sans',sans-serif] text-stone-900 selection:bg-[#F59E0B] selection:text-gray-950">
       
@@ -264,6 +281,8 @@ export default function App() {
         cart={cart}
         setIsCartOpen={setIsCartOpen}
         user={user}
+        isLoggedIn={isLoggedIn}
+        onLogout={handleLogout}
         setIsUserModalOpen={setIsUserModalOpen}
         setIsLoyaltyModalOpen={setIsLoyaltyModalOpen}
         notifications={notifications}
@@ -313,9 +332,11 @@ export default function App() {
             {/* User Login & Sign Up Portal on the Home Page */}
             <HomeAuthBanner
               user={user}
+              isLoggedIn={isLoggedIn}
               onOpenAuth={handleOpenAuth}
               onOpenProfile={() => setIsUserModalOpen(true)}
               onOpenLoyalty={() => setIsLoyaltyModalOpen(true)}
+              onLogout={handleLogout}
             />
 
             <HowItWorks />
@@ -328,9 +349,14 @@ export default function App() {
         {currentTab === 'auth' && (
           <AuthPage
             initialMode={authMode}
+            currentUser={user}
+            isLoggedIn={isLoggedIn}
+            onLogout={handleLogout}
             onAuthSuccess={(authedUser) => {
               setUser(authedUser);
+              setIsLoggedIn(true);
               saveStoredUser(authedUser);
+              saveStoredIsLoggedIn(true);
               setCurrentTab('home');
             }}
             onNavigateHome={() => setCurrentTab('home')}
@@ -402,6 +428,9 @@ export default function App() {
         setIsLoyaltyModalOpen={setIsLoyaltyModalOpen}
         setIsContactModalOpen={setIsContactModalOpen}
         onOpenAuth={handleOpenAuth}
+        isLoggedIn={isLoggedIn}
+        onLogout={handleLogout}
+        onOpenProfile={() => setIsUserModalOpen(true)}
       />
 
       {/* Floating AI Assistant ("Chef Laye") */}
@@ -501,6 +530,7 @@ export default function App() {
           setCurrentTab('tracking');
         }}
         onReorder={handleReorder}
+        onLogout={handleLogout}
       />
 
       {/* Contact & FAQ Modal */}

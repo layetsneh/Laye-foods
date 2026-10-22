@@ -15,6 +15,9 @@ interface FooterProps {
   setIsLoyaltyModalOpen: (open: boolean) => void;
   setIsContactModalOpen: (open: boolean) => void;
   onOpenAuth?: (mode: 'signin' | 'signup') => void;
+  isLoggedIn?: boolean;
+  onOpenProfile?: () => void;
+  onLogout?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -22,6 +25,9 @@ export const Footer: React.FC<FooterProps> = ({
   setIsLoyaltyModalOpen,
   setIsContactModalOpen,
   onOpenAuth,
+  isLoggedIn = false,
+  onOpenProfile,
+  onLogout,
 }) => {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
@@ -117,23 +123,42 @@ export const Footer: React.FC<FooterProps> = ({
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => {
-                    if (onOpenAuth) {
-                      onOpenAuth('signin');
-                    } else {
-                      setCurrentTab('auth');
-                    }
-                  }}
-                  className="hover:text-[#FBBF24] transition-colors text-amber-300 font-medium"
-                >
-                  Login / Sign Up
-                </button>
+                {!isLoggedIn ? (
+                  <button
+                    onClick={() => {
+                      if (onOpenAuth) {
+                        onOpenAuth('signin');
+                      } else {
+                        setCurrentTab('auth');
+                      }
+                    }}
+                    className="hover:text-[#FBBF24] transition-colors text-amber-300 font-medium cursor-pointer"
+                  >
+                    Login / Sign Up
+                  </button>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    <button
+                      onClick={() => onOpenProfile && onOpenProfile()}
+                      className="hover:text-[#FBBF24] transition-colors text-amber-300 font-medium text-left cursor-pointer"
+                    >
+                      My Profile & Orders
+                    </button>
+                    {onLogout && (
+                      <button
+                        onClick={onLogout}
+                        className="hover:text-rose-400 transition-colors text-rose-300/80 text-xs text-left cursor-pointer"
+                      >
+                        Sign Out
+                      </button>
+                    )}
+                  </div>
+                )}
               </li>
               <li>
                 <button
                   onClick={() => setCurrentTab('admin')}
-                  className="hover:text-[#FBBF24] transition-colors text-stone-400 text-xs flex items-center gap-1"
+                  className="hover:text-[#FBBF24] transition-colors text-stone-400 text-xs flex items-center gap-1 cursor-pointer"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-stone-500" />
                   Staff Portal (Kitchen Dispatch)

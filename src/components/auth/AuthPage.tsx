@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { UserProfile, DeliveryZone } from '../../types';
 import { DELIVERY_ZONES } from '../../data/menuData';
-import { DEMO_USERS, saveStoredUser, triggerPushNotification } from '../../services/storage';
+import { DEMO_USERS, saveStoredUser, saveStoredIsLoggedIn, triggerPushNotification } from '../../services/storage';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import { sounds } from '../../services/soundEffects';
 
@@ -23,12 +23,18 @@ interface AuthPageProps {
   onAuthSuccess: (user: UserProfile) => void;
   onNavigateHome: () => void;
   initialMode?: 'signin' | 'signup';
+  currentUser?: UserProfile;
+  isLoggedIn?: boolean;
+  onLogout?: () => void;
 }
 
 export const AuthPage: React.FC<AuthPageProps> = ({
   onAuthSuccess,
   onNavigateHome,
   initialMode = 'signin',
+  currentUser,
+  isLoggedIn = false,
+  onLogout,
 }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   
@@ -53,6 +59,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     const target = DEMO_USERS[userKey];
     if (target) {
       saveStoredUser(target);
+      saveStoredIsLoggedIn(true);
       onAuthSuccess(target);
       sounds.playSuccessFanfare();
       triggerPushNotification(
@@ -105,6 +112,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             favorites: ['lf-01', 'lf-02'],
           };
           saveStoredUser(authenticatedUser);
+          saveStoredIsLoggedIn(true);
           onAuthSuccess(authenticatedUser);
           sounds.playSuccessFanfare();
           return;
@@ -135,6 +143,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       };
 
       saveStoredUser(loggedUser);
+      saveStoredIsLoggedIn(true);
       onAuthSuccess(loggedUser);
       sounds.playSuccessFanfare();
       triggerPushNotification(
@@ -210,6 +219,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       };
 
       saveStoredUser(newUser);
+      saveStoredIsLoggedIn(true);
       onAuthSuccess(newUser);
       sounds.playSuccessFanfare();
 
@@ -298,6 +308,38 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-between">
           
           <div>
+            {isLoggedIn && currentUser && (
+              <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-700 text-white font-bold flex items-center justify-center text-sm shrink-0">
+                    {currentUser.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold">Currently signed in as {currentUser.name}</p>
+                    <p className="text-[11px] text-emerald-700">{currentUser.email || currentUser.phone} • {currentUser.tier}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={onNavigateHome}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Go to Menu
+                  </button>
+                  {onLogout && (
+                    <button
+                      type="button"
+                      onClick={onLogout}
+                      className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Mode Toggle Switch */}
             <div className="flex bg-stone-100 p-1 rounded-2xl mb-6">
               <button

@@ -17,6 +17,7 @@ const STORAGE_KEYS = {
   MENU: 'laye_foods_menu_v3',
   ORDERS: 'laye_foods_orders_v1',
   USER: 'laye_foods_user_v1',
+  IS_LOGGED_IN: 'laye_foods_is_logged_in_v1',
   ACTIVE_ORDER_ID: 'laye_foods_active_order_id_v1',
   NOTIFICATIONS: 'laye_foods_notifications_v1',
   CONTACT_MESSAGES: 'laye_foods_contact_messages_v1',
@@ -53,7 +54,20 @@ export const INITIAL_USER: UserProfile = {
     },
   ],
   favorites: ['lf-01', 'lf-02', 'lf-05', 'lf-07'],
-  dietaryPreferences: ['Prefers Extra Spicy', 'No Pork', 'Halal Only'],
+};
+
+export const GUEST_USER: UserProfile = {
+  id: 'guest',
+  name: 'Guest Diner',
+  email: '',
+  phone: '',
+  role: 'customer',
+  tier: 'Bronze Foodie',
+  loyaltyPoints: 0,
+  totalOrdersCount: 0,
+  totalSpent: 0,
+  addresses: [],
+  favorites: [],
 };
 
 export const DEMO_USERS: Record<string, UserProfile> = {
@@ -373,6 +387,28 @@ export const getStoredUser = (): UserProfile => {
 
 export const saveStoredUser = (user: UserProfile): void => {
   localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+};
+
+export const getStoredIsLoggedIn = (): boolean => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN);
+    if (raw !== null) {
+      return JSON.parse(raw);
+    }
+    // If not explicitly set yet, check if a stored user exists from prior sessions
+    const userRaw = localStorage.getItem(STORAGE_KEYS.USER);
+    if (userRaw) {
+      const u = JSON.parse(userRaw);
+      return Boolean(u && u.id && u.id !== 'guest');
+    }
+  } catch {
+    //
+  }
+  return true;
+};
+
+export const saveStoredIsLoggedIn = (isLoggedIn: boolean): void => {
+  localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, JSON.stringify(isLoggedIn));
 };
 
 export const getActiveOrderId = (): string => {

@@ -11,6 +11,7 @@ import {
   Check,
   Plus,
   RotateCcw,
+  LogOut,
 } from 'lucide-react';
 import { UserProfile, Order, DeliveryZone } from '../../types';
 import { DEMO_USERS, saveStoredUser } from '../../services/storage';
@@ -24,6 +25,7 @@ interface UserProfileModalProps {
   orders: Order[];
   onSelectOrderToTrack: (order: Order) => void;
   onReorder: (order: Order) => void;
+  onLogout?: () => void;
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({
@@ -34,6 +36,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   orders,
   onSelectOrderToTrack,
   onReorder,
+  onLogout,
 }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders'>('profile');
   const [newAddressLabel, setNewAddressLabel] = useState('Home');
@@ -367,10 +370,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-stone-50 border-t border-stone-200 flex justify-end">
+        <div className="p-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
+          {onLogout ? (
+            <button
+              onClick={() => {
+                onLogout();
+                onClose();
+              }}
+              className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+          ) : <div />}
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-stone-800 text-white rounded-xl font-bold text-xs hover:bg-black"
+            className="px-5 py-2 bg-stone-800 text-white rounded-xl font-bold text-xs hover:bg-black cursor-pointer"
           >
             Close
           </button>

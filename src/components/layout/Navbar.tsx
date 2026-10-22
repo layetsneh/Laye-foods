@@ -5,6 +5,7 @@ import {
   Award,
   User,
   LogIn,
+  LogOut,
   MapPin,
   Menu as MenuIcon,
   X,
@@ -21,6 +22,8 @@ interface NavbarProps {
   cart: CartItem[];
   setIsCartOpen: (open: boolean) => void;
   user: UserProfile;
+  isLoggedIn: boolean;
+  onLogout: () => void;
   setIsUserModalOpen: (open: boolean) => void;
   setIsLoyaltyModalOpen: (open: boolean) => void;
   notifications: AppNotification[];
@@ -38,6 +41,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   cart,
   setIsCartOpen,
   user,
+  isLoggedIn,
+  onLogout,
   setIsUserModalOpen,
   setIsLoyaltyModalOpen,
   notifications,
@@ -69,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'menu', label: 'Menu & Dishes' },
     { id: 'tracking', label: 'Order Tracking', badge: hasActiveOrder ? 'LIVE' : undefined },
     { id: 'loyalty', label: 'Chop Club' },
-    { id: 'auth', label: 'Login / Sign Up' },
+    ...(!isLoggedIn ? [{ id: 'auth', label: 'Login / Sign Up' }] : []),
     { id: 'about', label: 'About Us' },
     { id: 'contact', label: 'Contact & FAQ' },
   ];
@@ -258,19 +263,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="hidden xl:inline truncate max-w-[100px]">{user.name.split(' ')[0]}</span>
               </button>
 
-              {/* Quick Sign In button (Customer Auth) */}
-              <button
-                onClick={() => onOpenAuth('signin')}
-                title="Customer Sign In & Register"
-                className={`p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
-                  currentTab === 'auth'
-                    ? 'bg-[#F59E0B] text-gray-950 shadow-md'
-                    : 'bg-emerald-900/60 hover:bg-emerald-800 text-emerald-100 border border-emerald-700/60'
-                }`}
-              >
-                <LogIn className="w-4 h-4 text-[#F59E0B]" />
-                <span className="hidden sm:inline">Sign In</span>
-              </button>
+              {/* Customer Auth / Sign Out button */}
+              {!isLoggedIn ? (
+                <button
+                  onClick={() => onOpenAuth('signin')}
+                  title="Customer Sign In & Register"
+                  className={`p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    currentTab === 'auth'
+                      ? 'bg-[#F59E0B] text-gray-950 shadow-md'
+                      : 'bg-emerald-900/60 hover:bg-emerald-800 text-emerald-100 border border-emerald-700/60'
+                  }`}
+                >
+                  <LogIn className="w-4 h-4 text-[#F59E0B]" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </button>
+              ) : (
+                <button
+                  onClick={onLogout}
+                  title={`Signed in as ${user.name}. Click to Sign Out`}
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-rose-950/60 hover:border-rose-600/60 text-emerald-200 hover:text-rose-200 border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                  <span className="hidden xl:inline text-[11px]">Sign Out</span>
+                </button>
+              )}
 
               {/* Cart Button */}
               <button
@@ -353,22 +369,35 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="pt-2 flex gap-2">
-              <button
-                onClick={() => {
-                  onOpenAuth('signin');
-                  setMobileMenuOpen(false);
-                }}
-                className="flex-1 py-2.5 bg-[#F59E0B] text-gray-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md hover:bg-amber-400"
-              >
-                <LogIn className="w-4 h-4" />
-                Sign In / Register
-              </button>
+              {!isLoggedIn ? (
+                <button
+                  onClick={() => {
+                    onOpenAuth('signin');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex-1 py-2.5 bg-[#F59E0B] text-gray-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md hover:bg-amber-400 cursor-pointer"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In / Register
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex-1 py-2.5 bg-rose-950/70 hover:bg-rose-900 text-rose-200 border border-rose-800/60 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  Sign Out
+                </button>
+              )}
               <button
                 onClick={() => {
                   setIsUserModalOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="flex-1 py-2.5 bg-emerald-900/80 text-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-700/50"
+                className="flex-1 py-2.5 bg-emerald-900/80 text-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-700/50 cursor-pointer"
               >
                 <User className="w-4 h-4 text-[#F59E0B]" />
                 My Account
