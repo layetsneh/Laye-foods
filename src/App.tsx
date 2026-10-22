@@ -427,6 +427,7 @@ export default function App() {
         setCurrentTab={setCurrentTab}
         setIsLoyaltyModalOpen={setIsLoyaltyModalOpen}
         setIsContactModalOpen={setIsContactModalOpen}
+        setIsAboutModalOpen={setIsAboutModalOpen}
         onOpenAuth={handleOpenAuth}
         isLoggedIn={isLoggedIn}
         onLogout={handleLogout}

@@ -14,6 +14,7 @@ interface FooterProps {
   setCurrentTab: (tab: string) => void;
   setIsLoyaltyModalOpen: (open: boolean) => void;
   setIsContactModalOpen: (open: boolean) => void;
+  setIsAboutModalOpen?: (open: boolean) => void;
   onOpenAuth?: (mode: 'signin' | 'signup') => void;
   isLoggedIn?: boolean;
   onOpenProfile?: () => void;
@@ -24,6 +25,7 @@ export const Footer: React.FC<FooterProps> = ({
   setCurrentTab,
   setIsLoyaltyModalOpen,
   setIsContactModalOpen,
+  setIsAboutModalOpen,
   onOpenAuth,
   isLoggedIn = false,
   onOpenProfile,
@@ -109,6 +111,28 @@ export const Footer: React.FC<FooterProps> = ({
                   className="hover:text-[#FBBF24] transition-colors"
                 >
                   Track Active Order
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    if (setIsAboutModalOpen) {
+                      setIsAboutModalOpen(true);
+                    } else {
+                      setCurrentTab('about');
+                    }
+                  }}
+                  className="hover:text-[#FBBF24] transition-colors text-left"
+                >
+                  About Us
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setIsContactModalOpen(true)}
+                  className="hover:text-[#FBBF24] transition-colors text-left"
+                >
+                  Contact & FAQ
                 </button>
               </li>
               <li>
@@ -250,6 +274,36 @@ export const Footer: React.FC<FooterProps> = ({
             </form>
           </div>
 
+        </div>
+
+        {/* Bottom Page Navigation Links (About Us & Contact & FAQ) */}
+        <div className="py-5 border-b border-emerald-900/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs text-emerald-300">
+            <span className="font-bold text-white">Laye Foods</span>
+            <span className="text-emerald-500">•</span>
+            <span>Authentic Nigerian Kitchen & Catering</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => {
+                if (setIsAboutModalOpen) {
+                  setIsAboutModalOpen(true);
+                } else {
+                  setCurrentTab('about');
+                }
+              }}
+              className="px-4 py-2 rounded-xl bg-[#0C2B1E] hover:bg-[#144430] border border-emerald-700/80 hover:border-[#F59E0B] text-white hover:text-[#FBBF24] text-xs font-semibold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+            >
+              <span>About Us</span>
+            </button>
+            <button
+              onClick={() => setIsContactModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-[#0C2B1E] hover:bg-[#144430] border border-emerald-700/80 hover:border-[#F59E0B] text-white hover:text-[#FBBF24] text-xs font-semibold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+            >
+              <span>Contact & FAQ</span>
+            </button>
+          </div>
         </div>
 
         {/* Bottom bar */}

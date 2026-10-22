@@ -75,8 +75,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'tracking', label: 'Order Tracking', badge: hasActiveOrder ? 'LIVE' : undefined },
     { id: 'loyalty', label: 'Chop Club' },
     ...(!isLoggedIn ? [{ id: 'auth', label: 'Login / Sign Up' }] : []),
-    { id: 'about', label: 'About Us' },
-    { id: 'contact', label: 'Contact & FAQ' },
   ];
 
   return (
